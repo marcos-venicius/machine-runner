@@ -32,9 +32,7 @@ connect_container() {
 }
 
 remove_container() {
-  name="$1"
-  machine_id="$2"
-  container_name="$(echo $machine_id-$name | sha256sum | grep -oP "\w.*\w")"
+  container_name="$1"
 
   docker container stop $container_name
   docker container rm $container_name
@@ -47,16 +45,16 @@ machine_prompt() {
     prompt="💻 $OLD_PROMPT"
 
     machine_name="$(read_key name)"
-    container_name="$(echo $machine_id-$name | sha256sum | grep -oP "\w.*\w")"
+    machine_id="$(pwd | base64)"
+    container_name="$(echo $machine_id-$machine_name | sha256sum | grep -oP "\w.*\w")"
     image_name="$(read_key image)"
     storage="$(read_key storage)"
-    machine_id="$(pwd | base64)"
 
     mkdir -p /tmp/$machine_id/data
 
     alias os_connect="connect_container $machine_name $machine_id $storage $image_name"
     alias os_info="echo -e '\nOS INFO:\n\nId: \t\t\t$machine_id\nName: \t\t\t$container_name\nImage: \t\t\t$image_name\nStorage Location: \t/tmp/$machine_id/data\n'"
-    alias os_remove="remove_container"
+    alias os_remove="remove_container $container_name"
   else
     prompt="$OLD_PROMPT"
   fi
