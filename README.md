@@ -29,12 +29,11 @@ And you will have an output like this:
 
 ```
 
-OS INFO:
+OS INFO
 
-Id:                     L2hvbWUvZGV2L3Byb2plY3RzL21hY2hpbmVzL2FscGluZQo=
-Name:
-Image:                  alpine:latest
-Storage Location:       /tmp/L2hvbWUvZGV2L3Byb2plY3RzL21hY2hpbmVzL2FscGluZQo=/data
+ID:                     d442817e2db23ed43084cd812c3ae1cddd02d7185c70ffe83d0ddf0cac281cc6
+IMAGE:                  alpile:latest
+STORAGE LOCATION:       /tmp/d442817e2db23ed43084cd812c3ae1cddd02d7185c70ffe83d0ddf0cac281cc6/data
 
 ```
 

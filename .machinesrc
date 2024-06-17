@@ -2,6 +2,8 @@
 
 CONFIG_FILE="./machine.config"
 OLD_PROMPT="$PS1"
+MACHINE_ID="$(pwd | base64 | sha256sum | grep -oP '[a-z0-9]+')"
+MACHINE_STORAGE_LOCATION="/tmp/$MACHINE_ID/data"
 
 read_key() {
   local key="$1"
@@ -15,27 +17,34 @@ read_key() {
 }
 
 connect_container() {
-  name="$1"
-  machine_id="$2"
-  storage_location="$3"
-  image_name="$4"
-  container_name="$(echo $machine_id-$name | sha256sum | grep -oP "\w.*\w")"
+  storage="$1"
+  image_name="$2"
 
-  container_running=$(docker ps -a --format "{{.Names}}" | grep $container_name)
+  container_running=$(docker ps -a --format "{{.Names}}" | grep $MACHINE_ID)
 
   if [ -n "$container_running" ]; then
-    docker start $container_name
-    docker exec -it $container_name /bin/sh
+    docker start $MACHINE_ID
+    docker exec -it $MACHINE_ID /bin/sh
   else
-    docker run --name $container_name --volume=/tmp/$machine_id/data:$storage -it --tty $image_name
+    docker run --name $MACHINE_ID --volume=$MACHINE_STORAGE_LOCATION:$storage -it --tty $image_name
   fi
 }
 
-remove_container() {
-  container_name="$1"
+show_info() {
+  image_name="$1"
 
-  docker container stop $container_name
-  docker container rm $container_name
+  echo ""
+  echo -e "\033[1;37mOS INFO\033[0m"
+  echo ""
+  echo -e "\033[1;36mID:\033[0m\t\t\t$MACHINE_ID"
+  echo -e "\033[1;36mIMAGE:\033[0m\t\t\t$image_name"
+  echo -e "\033[1;36mSTORAGE LOCATION:\033[0m\t$MACHINE_STORAGE_LOCATION"
+  echo ""
+}
+
+remove_container() {
+  docker container stop $MACHINE_ID
+  docker container rm $MACHINE_ID
 }
 
 machine_prompt() {
@@ -45,16 +54,14 @@ machine_prompt() {
     prompt="💻 $OLD_PROMPT"
 
     machine_name="$(read_key name)"
-    machine_id="$(pwd | base64)"
-    container_name="$(echo $machine_id-$machine_name | sha256sum | grep -oP "\w.*\w")"
     image_name="$(read_key image)"
     storage="$(read_key storage)"
 
-    mkdir -p /tmp/$machine_id/data
+    mkdir -p "$MACHINE_STORAGE_LOCATION"
 
-    alias os_connect="connect_container $machine_name $machine_id $storage $image_name"
-    alias os_info="echo -e '\nOS INFO:\n\nId: \t\t\t$machine_id\nName: \t\t\t$container_name\nImage: \t\t\t$image_name\nStorage Location: \t/tmp/$machine_id/data\n'"
-    alias os_remove="remove_container $container_name"
+    alias os_connect="connect_container $storage $image_name"
+    alias os_info="show_info $image_name"
+    alias os_remove="remove_container"
   else
     prompt="$OLD_PROMPT"
   fi
